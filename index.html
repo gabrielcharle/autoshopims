@@ -1,0 +1,333 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts Inventory Management System - Assigment 2 Prototype</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color:greenyellow; 
+        }
+
+        header { 
+            background-color: Blue; 
+            color: white; 
+            padding: 20px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        header h1 { 
+            margin:0;
+            font-size: 1.5em; 
+        }
+
+        #app-container { 
+            max-width: 800px; 
+            margin: 40px auto; 
+            background-color: lightblue; 
+            padding: 20px; 
+            border-radius: 20px; 
+             
+        }
+
+        .page { 
+            display: none; 
+            padding: 40px 10; 
+        }
+
+        .page.active { display: block; }
+
+        /* Styles Form & Input */
+        form { display: flex; flex-direction: column-reverse; gap: 20px; max-width: 600px; padding: 20px; border: 2px solid red; border-radius: 10px; margin-bottom: 40px;}
+        input[type="email"], input[type="password"], input[type="text"], input[type="number"], button, select { padding: 10px; border: 1px solid black; border-radius: 4px; }
+        button { background-color: blue; color: white; cursor: pointer; font-weight: bold; }
+        button:hover:not(:disabled) { background-color: grey; }
+        button:disabled { background-color: pink; cursor: not-allowed; }
+
+        /* Table & Alerts */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid beige; padding: 8px; text-align: left; }
+        th { background-color: white; color: green; }
+        .alert-low-stock { background-color: orange; color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .btn-small { padding: 5px 10px; font-size: 0.8em; margin-right: 5px;}
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚙️ Inventory Management System Prototype 1</h1>
+        <div id="auth-status">
+            <span id="user-email">User</span>
+            <button id="signOut-Btn" style="display:none;">Logout</button>
+        </div>
+    </header>
+
+    <div id="app-container">
+        <div id="signIn-page" class="page active">
+            <h2>Employee Login</h2>
+            <form id="signIn-form">
+                <input type="email" id="signIn-email" placeholder="Email (e.g., joe@autoshop.com)" needed>
+                <input type="password" id="login-password" placeholder="Password" needed>
+                <button type="submit">Sign In</button>
+                <p id="login-message" class="error"></p>
+            </form>
+        </div>
+
+        <div id="dashboard-page" class="page">
+            <h2>Inventory Management</h2>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button onclick="showPage('inbound-page')">🚚 Log Inbound Stock</button>
+                <button onclick="showPage('outbound-page')">🛍️ Log Outbound Stock</button>
+                <button onclick="showPage('new-part-page')">➕ Add New Part</button>
+            </div>
+
+            <p>Total Parts: <strong id="total-parts">0</strong> | Low Stock Alerts: <strong id="low-stock-count">0</strong></p>
+
+            <h3>Current Inventory</h3>
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Part Number.</th>
+                        <th>Part Name</th>
+                        <th>Bin Number</th>
+                        <th>Stock</th>
+                        <th>Reorder Point</th>
+                        <th>Cost</th>
+                        <th>Manage Existing Stock</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-table-body">
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="inbound-page" class="page">
+            <h2>Inbound Stock (Restock)</h2>
+            <form id="inbound-form">
+                <input type="text" id="inbound-part-number" placeholder="Part Number (e.g., VEE BELT-001)" needed>
+                <input type="number" id="inbound-amount" placeholder="amount Collected" min="1" needed>
+                <input type="text" id="inbound-ref" placeholder="Supplier/PO Reference" needed>
+                <button type="submit">Submit Inbound</button>
+                <p id="inbound-message"></p>
+            </form>
+            <button onclick="showPage('dashboard-page')">← Switch to Inventory</button>
+        </div>
+
+        <div id="outbound-page" class="page">
+            <h2>Outbound Stock (Sale)</h2>
+            <form id="outbound-form">
+                <input type="text" id="outbound-part-id" placeholder="Part ID (e.g., VEE BELT-001)" needed>
+                <input type="number" id="outbound-amount" placeholder="amount Sold" min="1" needed>
+                <input type="text" id="outbound-ref" placeholder="Invoice/Customer Ref" needed>
+                <button type="submit">Log Outbound</button>
+                <p id="outbound-message"></p>
+            </form>
+            <button onclick="showPage('dashboard-page')">← Switch to Inventory</button>
+        </div>
+        
+        <div id="new-part-page" class="page">
+            <h2>Add New Automotive Parts</h2>
+            <form id="new-part-form">
+                <input type="text" id="new-part-id" placeholder="Part ID (e.g., GASKET-100)" needed>
+                <input type="text" id="new-part-name" placeholder="Part Name" needed>
+                <input type="text" id="new-part-location" placeholder="Physical Bin Number" needed>
+                <input type="number" id="new-part-stock" placeholder="Initial Stock" min="0" needed>
+                <input type="number" id="new-part-reorder" placeholder="Reorder Point" min="0" needed>
+                <input type="number" id="new-part-price" placeholder="Selling Price" min="0" step="0.01" needed>
+                <button type="submit">Create New Part</button>
+                <p id="new-part-message"></p>
+            </form>
+            <button onclick="showPage('dashboard-page')">← Switch to Inventory</button>
+        </div>
+        
+        <div id="edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100;">
+            <div style="background:white; margin:10% auto; padding:20px; border-radius:8px; max-width:400px;">
+                <h3>Edit Part Details</h3>
+                <form id="edit-part-form">
+                    <input type="hidden" id="edit-part-id">
+                    <label>Part Number (Cannot change):</label><input type="text" id="edit-display-id" disabled>
+                    <label>Name:</label><input type="text" id="edit-name" needed>
+                    <label>Bin Number:</label><input type="text" id="edit-location" needed>
+                    <label>Reorder Point:</label><input type="number" id="edit-reorder" min="0" needed>
+                    <label>Selling Price:</label><input type="number" id="edit-price" min="0" step="0.01" needed>
+                    <button type="submit">Save Changes</button>
+                </form>
+                <button onclick="document.getElementById('edit-modal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SIMULATED BACKEND (Browser Memory) ---
+        let isAuthenticated = false;
+        let inventory = {
+            'VEE BELT-001': { name: 'Vee Belt X', location: 'A1-B3', currentStock: 15, reorderPoint: 10, sellingPrice: 9.99 },
+            'BRAKE-105': { name: 'Brake Pad Set', location: 'C5-S1', currentStock: 3, reorderPoint: 5, sellingPrice: 45.50 },
+            'SPARK-22': { name: 'Spark Plug 4-Pack', location: 'D2-H1', currentStock: 50, reorderPoint: 20, sellingPrice: 12.00 }
+        };
+
+        // --- GLOBAL DOM ELEMENTS ---
+        const signInPage = document.getElementById('signIn-page');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const inventoryTableBody = document.getElementById('inventory-table-body');
+        const userEmailSpan = document.getElementById('user-email');
+        const signOutBtn = document.getElementById('signOut-Btn');
+        const editModal = document.getElementById('edit-modal');
+        
+        // --- key NAVIGATION FUNCTION (SPA) ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            // Ensure the dashboard refreshes when navigated to
+            if (pageId === 'dashboard-page') {
+                renderInventory();
+            }
+        }
+
+        // --- SIMULATED AUTHENTICATION ---
+        function checkAuth() {
+            if (isAuthenticated) {
+                userEmailSpan.textContent = `Sign in (Admin)`;
+                signOutBtn.style.display = 'inline';
+                showPage('dashboard-page');
+            } else {
+                userEmailSpan.textContent = 'Guest';
+                signOutBtn.style.display = 'none';
+                showPage('signIn-page');
+            }
+        }
+
+        document.getElementById('signIn-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signIn-email').value;
+            // Simulated login: any input works
+            isAuthenticated = true;
+            document.getElementById('login-message').textContent = '';
+            checkAuth();
+        });
+
+        signOutBtn.addEventListener('click', () => {
+            isAuthenticated = false;
+            checkAuth();
+        });
+
+        // --- CRUD: READ (Render Inventory) ---
+        function renderInventory() {
+            let html = '';
+            let totalParts = 0;
+            let lowStockCount = 0;
+            
+            for (const partId in inventory) {
+                const data = inventory[partId];
+                totalParts++;
+                const isLowStock = data.currentStock <= data.reorderPoint;
+                if (isLowStock) lowStockCount++;
+                
+                const rowClass = isLowStock ? 'alert-low-stock' : '';
+
+                html += `
+                    <tr class="${rowClass}">
+                        <td>${partId}</td>
+                        <td>${data.name}</td>
+                        <td>${data.location}</td>
+                        <td>${data.currentStock}</td>
+                        <td>${data.reorderPoint}</td>
+                        <td>$${data.sellingPrice.toFixed(2)}</td>
+                        <td>
+                            <button class="btn-small" onclick="openEditModal('${partId}')">Edit</button>
+                            <button class="btn-small" onclick="deletePart('${partId}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            inventoryTableBody.innerHTML = html;
+            document.getElementById('total-parts').textContent = totalParts;
+            document.getElementById('low-stock-count').textContent = lowStockCount;
+        }
+
+        // --- CRUD: CREATE (New Part) ---
+        document.getElementById('new-part-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const partId = form['new-part-id'].value.trim().toUpperCase();
+            const message = document.getElementById('new-part-message');
+            message.className = '';
+
+            if (inventory[partId]) {
+                message.textContent = `Error: Part ID "${partId}" already exists.`;
+                message.className = 'error';
+                return;
+            }
+
+            inventory[partId] = {
+                name: form['new-part-name'].value,
+                location: form['new-part-location'].value,
+                currentStock: Number(form['new-part-stock'].value),
+                reorderPoint: Number(form['new-part-reorder'].value),
+                sellingPrice: Number(form['new-part-price'].value)
+            };
+
+            message.textContent = `Successfully added new part: ${partId}.`;
+            message.className = 'success';
+            form.reset();
+            renderInventory(); 
+        });
+
+        // --- CRUD: UPDATE (Stock Movement - Simulate Transaction) ---
+        
+        function handleStockMovement(e, type) {
+            e.preventDefault();
+            const form = e.target;
+            const partId = form[type + '-part-id'].value.trim().toUpperCase();
+            const amount = Number(form[type + '-amount'].value);
+            const message = document.getElementById(type + '-message');
+            message.className = '';
+
+            if (!inventory[partId]) {
+                message.textContent = `Error: Part ID "${partId}" not found.`;
+                message.className = 'error';
+                return;
+            }
+
+            let newStock = inventory[partId].currentStock;
+
+            if (type === 'inbound') {
+                newStock += amount;
+            } else if (type === 'outbound') {
+                if (newStock < amount) {
+                    message.textContent = `Error: Insufficient stock. Only ${newStock} units left.`;
+                    message.className = 'error';
+                    return;
+                }
+                newStock -= amount;
+            }
+            
+            // SIMULATED ATOMIC UPDATE
+            inventory[partId].currentStock = newStock;
+
+            message.textContent = `Successfully logged ${type} of ${amount} units for ${partId}. New Stock: ${newStock}.`;
+            message.className = 'success';
+            form.reset();
+            renderInventory(); 
+        }
+
+        document.getElementById('inbound-form').addEventListener('submit', (e) => handleStockMovement(e, 'inbound'));
+        document.getElementById('outbound-form').addEventListener('submit', (e) => handleStockMovement(e, 'outbound'));
+
+
+        // Initialize the app view
+        checkAuth(); 
+    </script>
+</body>
+</html>
